@@ -35,14 +35,15 @@ def calculate_angle_between_panel_sun(latitude, date_to_calculate):
     rotation_axis = numpy.array([-sin(earth_offset), 0, cos(earth_offset)])
 
     midnight = dt(month=date_to_calculate.month, day=date_to_calculate.day,
-                  year=date_to_calculate.year, hour=0, minute=0, tzinfo=pytz.timezone('US/Pacific'))
+                  year=date_to_calculate.year, hour=0, minute=0)
 
-    minutes_from_midnight = ((date_to_calculate - midnight).seconds / 60)
-    t = math.floor(minutes_from_midnight / 60) + ((minutes_from_midnight % 60) /100) - 12
-    print(t)
+    minutes_from_midnight = ((date_to_calculate - pytz.timezone('US/Pacific').localize(midnight)).seconds / 60)
+    t = minutes_from_midnight / 60 - 12
+
+    print(f't = {t}, minutes since mid = {minutes_from_midnight}')
     gamma = PERIOD_OF_DAYS * t
     # position of observer is a
-    position_of_observer = cos(gamma) * position_at_midday + sin(gamma) * cross(rotation_axis, position_at_midday) \
+    position_of_observer = (cos(gamma) * position_at_midday) + (sin(gamma) * cross(rotation_axis, position_at_midday)) \
                            + (dot(rotation_axis, position_at_midday) * ((1 - cos(gamma)) * rotation_axis))
 
     rotation_about_y = numpy.array([0, 1, 0])

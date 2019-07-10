@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 import math
+from math import radians as rad
 from math import cos as cos, sin as sin
 import numpy
 from numpy import dot as dot, cross as cross
@@ -28,8 +29,9 @@ def calculate_atmospheric_attenuation(latitude, date_to_calculate):
                   year=date_to_calculate.year, hour=0, minute=0, tzinfo=pytz.timezone('US/Pacific'))
 
     minutes_from_midnight = ((date_to_calculate - midnight).seconds / 60)
+    t = math.floor(minutes_from_midnight / 60) + ((minutes_from_midnight % 60) / 100) - 12
 
-    gamma = PERIOD_OF_DAYS * minutes_from_midnight
+    gamma = PERIOD_OF_DAYS * t
     position_of_observer = cos(gamma) * position_at_midday + sin(gamma) * cross(rotation_axis, position_at_midday) \
                            + (dot(rotation_axis, position_at_midday) * ((1 - cos(gamma)) * rotation_axis))
 
