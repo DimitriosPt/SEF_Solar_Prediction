@@ -16,8 +16,8 @@ def calculate_angle_between_panel_sun(latitude, date_to_calculate):
     PANEL_TILT_VERTICAL = 25
     PANEL_TILT_HORIZONTAL = 0
 
-    alpha = math.radians(PANEL_TILT_VERTICAL)
-    beta = math.radians(PANEL_TILT_HORIZONTAL)
+    alpha = PANEL_TILT_VERTICAL * PI / 180
+    beta = PANEL_TILT_HORIZONTAL * PI / 180
 
     # convert date given to datetime object
     # date_to_calculate = dt.date(date_to_calculate)
@@ -30,21 +30,22 @@ def calculate_angle_between_panel_sun(latitude, date_to_calculate):
 
     days_since_summer_sols = (date_to_calculate - summer_solstice).days
 
-    earth_offset = -EARTH_TILT * cos(TILT_VARIATION * days_since_summer_sols)
+    earth_offset = math.radians(-EARTH_TILT * cos(TILT_VARIATION * days_since_summer_sols))
     position_at_midday = numpy.array([cos(earth_offset + latitude), 0, sin(earth_offset + latitude)])
     rotation_axis = numpy.array([-sin(earth_offset), 0, cos(earth_offset)])
 
+    # The original matlab code uses a variable t which is effectively how many hundredths of an hour have
+    # passed since midnight as opposed to a conventional time interval
     midnight = dt(month=date_to_calculate.month, day=date_to_calculate.day,
                   year=date_to_calculate.year, hour=0, minute=0)
-
     minutes_from_midnight = ((date_to_calculate - pytz.timezone('US/Pacific').localize(midnight)).seconds / 60)
+
     t = minutes_from_midnight / 60 - 12
 
-    print(f't = {t}, minutes since mid = {minutes_from_midnight}')
     gamma = PERIOD_OF_DAYS * t
-    # position of observer is a
+    # position at midday is a
     position_of_observer = (cos(gamma) * position_at_midday) + (sin(gamma) * cross(rotation_axis, position_at_midday)) \
-                           + (dot(rotation_axis, position_at_midday) * ((1 - cos(gamma)) * rotation_axis))
+                           + (dot(rotation_axis, position_at_midday) * (1 - cos(gamma)) * rotation_axis)
 
     rotation_about_y = numpy.array([0, 1, 0])
     c = cos(earth_offset) * position_of_observer + sin(earth_offset) * cross(rotation_about_y, position_of_observer) + \

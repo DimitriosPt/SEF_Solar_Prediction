@@ -26,11 +26,10 @@ def calculate_atmospheric_attenuation(latitude, date_to_calculate):
     rotation_axis = numpy.array([-sin(earth_offset), 0, cos(earth_offset)])
     position_at_midday = numpy.array([cos(earth_offset + latitude), 0, sin(earth_offset + latitude)])
     midnight = dt(month=date_to_calculate.month, day=date_to_calculate.day,
-                  year=date_to_calculate.year, hour=0, minute=0, tzinfo=pytz.timezone('US/Pacific'))
+                  year=date_to_calculate.year, hour=0, minute=0)
 
-    minutes_from_midnight = ((date_to_calculate - midnight).seconds / 60)
-    t = math.floor(minutes_from_midnight / 60) + ((minutes_from_midnight % 60) / 100) - 12
-
+    minutes_from_midnight = ((date_to_calculate - pytz.timezone('US/Pacific').localize(midnight)).seconds / 60)
+    t = minutes_from_midnight / 60 - 12
     gamma = PERIOD_OF_DAYS * t
     position_of_observer = cos(gamma) * position_at_midday + sin(gamma) * cross(rotation_axis, position_at_midday) \
                            + (dot(rotation_axis, position_at_midday) * ((1 - cos(gamma)) * rotation_axis))
