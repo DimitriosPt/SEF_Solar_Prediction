@@ -42,11 +42,11 @@ with open('energyForecast.csv', 'w', newline='') as energyFile:
         atmospheric_attenuation = atmospheric_atten(sonoma_lat_radians, start_date)
         # precip_chance = get_weather_atten(sonomaLatitude, sonomaLongitude, start_date)
         energy = angle_between_sun_panel * atmospheric_attenuation \
-                 #* math.cos((1 - math.radians(precip_chance)))
+                 * math.cos((1 - math.radians(precip_chance)))
         date_to_write = start_date
 
         if pacific_tz.localize(dst_start) <= date_to_write <= pacific_tz.localize(dst_end):
-            date_to_write = date_to_write + datetime.timedelta(hours=1)
+            date_to_write = date_to_write + datetime.timedelta(hours=2)
         writer.writerow([date_to_write.strftime(time_format), angle_between_sun_panel, atmospheric_attenuation,
                          # precip_chance,
                          energy])
