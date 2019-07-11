@@ -23,6 +23,7 @@ def calculate_angle_between_panel_sun(latitude, date_to_calculate):
     # date_to_calculate = dt.date(date_to_calculate)
     summer_solstice = dt(month=6, day=21, year=date_to_calculate.year)
     summer_solstice = summer_solstice.replace(tzinfo=pytz.timezone('US/Pacific'))
+    date_to_calculate = date_to_calculate.replace(tzinfo=pytz.timezone('US/Pacific'))
     # if you have a date like march 31st 2019 it would give a negative date
     # this if statement will make it so 3/31/19 compares to solstice of 6/21/18
     if (date_to_calculate - summer_solstice).days < 0:
@@ -30,6 +31,7 @@ def calculate_angle_between_panel_sun(latitude, date_to_calculate):
 
     days_since_summer_sols = (date_to_calculate - summer_solstice).days
 
+    #revisit math to see if this should be radians
     earth_offset = math.radians(-EARTH_TILT * cos(TILT_VARIATION * days_since_summer_sols))
     position_at_midday = numpy.array([cos(earth_offset + latitude), 0, sin(earth_offset + latitude)])
     rotation_axis = numpy.array([-sin(earth_offset), 0, cos(earth_offset)])
