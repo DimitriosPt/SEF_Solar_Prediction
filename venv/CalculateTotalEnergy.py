@@ -19,7 +19,8 @@ sonoma_lat_radians = math.radians(sonomaLatitude)
 sonomaLongitude = -122.503
 
 # precip_chance = get_weather_atten(sonomaLatitude, sonomaLongitude, today)
-
+# TODO Change cutoff for angle of sunlight to accept before pushing it to 0,
+# or research other things that might cause the graph to widen
 time_format = '%d/%m/%Y %H:%M'
 start_date = today - datetime.timedelta(days=5)
 with open('energyForecast.csv', 'w', newline='') as energyFile:
