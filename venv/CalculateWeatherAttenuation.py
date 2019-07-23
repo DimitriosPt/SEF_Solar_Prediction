@@ -13,8 +13,7 @@ from datetime import datetime as dt
 # Either be a UNIX time (that is, seconds since midnight GMT on 1 Jan 1970) or a string formatted as follows:
 # [YYYY]-[MM]-[DD]T[HH]:[MM]:[SS]
 def calculateWeatherAttenuation(latitude, longitude, date_to_calculate):
-    DARKSKYKEY = 'acda2d80fe25679c6a0d3a2800e80760'
-       # '79b72a42c4e643927e13401556084447'
+
     #date_to_calculate = dt(date_to_calculate)
     epoch_time = math.floor(date_to_calculate.timestamp())
     daily_forecast = forecast(DARKSKYKEY, latitude, longitude, epoch_time)
