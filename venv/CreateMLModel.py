@@ -20,8 +20,10 @@ df_new['Year'] = pd.DatetimeIndex(df['Date & Time']).year
 df_new['Month'] = pd.DatetimeIndex(df['Date & Time']).month
 df_new['Day'] = pd.DatetimeIndex(df['Date & Time']).day
 df_new['Hour'] = pd.DatetimeIndex(df['Date & Time']).hour
+
 for index, row in df_new.iterrows():
-    date = dt.datetime.strptime(row['Date & Time'], '%Y-%m-%d %H:%M:%S')
+    date = dt.datetime.strptime(row['Date & Time'], '%m/%d/%Y %H:%M')
+    # date = dt.datetime.strptime(row['Date & Time'], '%Y-%m-%d %H:%M:%S')
     # df_new.loc[index, 'Precipitation Chance'] = PrecipChance(SONOMALAT, SONOMALONG, date)
     daily_forecast = getWeatherData(SONOMALAT, SONOMALONG, date)
     daily_data = daily_forecast.daily.data[0]

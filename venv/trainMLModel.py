@@ -27,16 +27,22 @@ from scipy.signal import filtfilt as filter
 
 
 dataset_location = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\butlerML.csv"
-butler_data_path= r"C:\Users\ptdim\Desktop\MLTesting\butlerYearly.csv"
+butler_data_path= r"C:\Users\ptdim\Desktop\MLTesting\butlerYearlyAug.csv"
 butler_data = pd.read_csv(butler_data_path)
-
 data = pd.read_csv(dataset_location)
 feature_cols = ['Generation [kWh]', 'Day', 'Month',
                 'Precipitation Intensity', 'Precipitation Probability', 'Dew Point',
                 'Highest Temp', 'Lowest Temp', 'Humidity', 'UV Index']
-X_train, X_test = train_test_split(data, test_size=0.2)
 
-actual_generation = data["Generation [kWh]"]
+a,b = butter(3, 0.05)
+filtered_data = data
+# Effectively filters the Generation column with a Butterworth Filter to make it less noisy. Training the model
+# off of unfiltered data led to the model predicting massive osscilations due to the inconsistancy of
+# the data we were pulling in.
+filtered_data["Generation [kWh]"] = filter(a,b,data["Generation [kWh]"])
+X_train, X_test = train_test_split(filtered_data, test_size=0.2)
+
+actual_generation = filtered_data["Generation [kWh]"]
 # Sets the dependant variables into their own data structures
 y_train = X_train["Generation [kWh]"]
 y_test = X_test["Generation [kWh]"]
@@ -77,20 +83,21 @@ with open('predictions.csv', 'w', newline='') as prediction_file:
         prediction_list.append(prediction)
         #Predictions are outputted with brackets around the number which is a nuisance when
         # trying to graph the data in excel so I remove them before writing to the csv
-        data.loc[index, "Predicted Generation [kWh]"] = str(prediction).strip("[]")
+        filtered_data.loc[index, "Predicted Generation [kWh]"] = str(prediction).strip("[]")
+        filtered_data.loc[index, "Date"] = day_to_predict
         write_string = write_string.strip("[]")
         writer.writerow([day_to_predict, write_string])
 
 
-a, b = butter(3, 0.05)
+
 filtered_predictions = filter(a, b, prediction_list, axis=0)
 filtered_actual = filter(a, b, butler_data["Generation [kWh]"], axis=0)
-data["Filtered Predictions"] = filtered_predictions
-data["Actual Generation [kWh]"] = butler_data["Generation [kWh]"]
-data["Filtered Actual"] = filtered_actual
+filtered_data["Filtered Predictions"] = filtered_predictions
+#data["Actual Generation [kWh]"] = butler_data["Generation [kWh]"]
+filtered_data["Filtered Actual"] = filtered_actual
 
 
-data.to_csv(r"C:\Users\ptdim\Desktop\MLTesting\filteredCSV.csv")
+filtered_data.to_csv(r"C:\Users\ptdim\Desktop\MLTesting\filteredCSV.csv")
 plt.plot(filtered_predictions)
 
 plt.show()
