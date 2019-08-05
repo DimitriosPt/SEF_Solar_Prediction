@@ -33,10 +33,17 @@ data = pd.read_csv(dataset_location)
 feature_cols = ['Generation [kWh]', 'Day', 'Month',
                 'Precipitation Intensity', 'Precipitation Probability', 'Dew Point',
                 'Highest Temp', 'Lowest Temp', 'Humidity', 'UV Index']
+# The data that we pull from the egauges are cummulative, so if we want to get an actual daily solar production reading
+# we have to subtract yesterday's totals from today's totals to see how much power we generated on the previous day
+data["Generation [kWh]"] = data["Generation [kWh]"].diff(periods=-1)
+# because getting the daily readings is obtained by subtracting one value from the one below it, this means the bottom
+# row of data will either be massive (and incorrect), or result in NaN, so we are just dropping the bottom row to avoid
+# these issues
+data.drop(data.tail(1).index,inplace=True)
 
 a,b = butter(3, 0.05)
 filtered_data = data
-# Effectively filters the Generation column with a Butterworth Filter to make it less noisy. Training the model
+# Filters the Generation column with a Butterworth Filter to make it less noisy. Training the model
 # off of unfiltered data led to the model predicting massive osscilations due to the inconsistancy of
 # the data we were pulling in.
 filtered_data["Generation [kWh]"] = filter(a,b,data["Generation [kWh]"])
