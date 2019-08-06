@@ -13,7 +13,7 @@
 from darksky import forecast
 import math
 from datetime import datetime as dt
-from API_keys import DARKSKYKEY as DARKSYKEY
+from gitignore.API_keys import DARKSKYKEY2 as DARKSYKEY
 
 # time required
 # Either be a UNIX time (that is, seconds since midnight GMT on 1 Jan 1970) or a string formatted as follows:

@@ -5,7 +5,7 @@ from CalculateWeatherAttenuation import getPrecipitationChance as PrecipChance
 from CalculateWeatherAttenuation import getWeatherData
 SONOMALONG = -122.503
 SONOMALAT = 38.387
-FILEPATH = r"C:\Users\ptdim\Desktop\MLTesting\butlerYearly.csv"
+FILEPATH = r"C:\Users\ptdim\Desktop\MLTesting\main_house_garage_cummulative.csv"
 df = pd.read_csv(FILEPATH)
 
 df_new = pd.DataFrame()
@@ -37,5 +37,5 @@ for index, row in df_new.iterrows():
     
     
 df_new = df_new.drop("Date & Time", axis=1)
-df_new.to_csv(r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\butlerML.csv", index=None)
+df_new.to_csv(r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\main_house_garageML.csv", index=None)
 print(df_new.head())

@@ -1,3 +1,5 @@
+#TODO figure out why the actual data is being recorded as already filtered 8/5/2019
+
 # Dimitrios Papageorgacopoulos
 # Wooster Engineering
 # Summer 2019
@@ -26,30 +28,36 @@ from scipy.signal import butter as butter
 from scipy.signal import filtfilt as filter
 
 
-dataset_location = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\butlerML.csv"
-butler_data_path= r"C:\Users\ptdim\Desktop\MLTesting\butlerYearlyAug.csv"
+dataset_location = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\main_house_garageML.csv"
+butler_data_path= r"C:\Users\ptdim\Desktop\MLTesting\butlerYearly.csv"
 butler_data = pd.read_csv(butler_data_path)
 data = pd.read_csv(dataset_location)
 feature_cols = ['Generation [kWh]', 'Day', 'Month',
                 'Precipitation Intensity', 'Precipitation Probability', 'Dew Point',
                 'Highest Temp', 'Lowest Temp', 'Humidity', 'UV Index']
+
 # The data that we pull from the egauges are cummulative, so if we want to get an actual daily solar production reading
 # we have to subtract yesterday's totals from today's totals to see how much power we generated on the previous day
 data["Generation [kWh]"] = data["Generation [kWh]"].diff(periods=-1)
+plt.plot(data["Generation [kWh]"])
+butler_data["Generation [kWh]"] = butler_data["Generation [kWh]"].diff(periods=-1)
+
 # because getting the daily readings is obtained by subtracting one value from the one below it, this means the bottom
 # row of data will either be massive (and incorrect), or result in NaN, so we are just dropping the bottom row to avoid
 # these issues
 data.drop(data.tail(1).index,inplace=True)
+butler_data.drop(data.tail(1).index,inplace=True)
 
-a,b = butter(3, 0.05)
-filtered_data = data
 # Filters the Generation column with a Butterworth Filter to make it less noisy. Training the model
 # off of unfiltered data led to the model predicting massive osscilations due to the inconsistancy of
 # the data we were pulling in.
-filtered_data["Generation [kWh]"] = filter(a,b,data["Generation [kWh]"])
+a,b = butter(3, 0.05)
+filtered_data = data #makes a copy of the filtered data so we can compare pre-filter and post-filter
+filtered_data["Generation [kWh]"] = filter(a,b,filtered_data["Generation [kWh]"])
+
 X_train, X_test = train_test_split(filtered_data, test_size=0.2)
 
-actual_generation = filtered_data["Generation [kWh]"]
+filtered_data["Actual Generation"] = data["Generation [kWh]"]
 # Sets the dependant variables into their own data structures
 y_train = X_train["Generation [kWh]"]
 y_test = X_test["Generation [kWh]"]
@@ -60,53 +68,55 @@ X_test = X_test.drop(columns="Generation [kWh]")
 ridge = Ridge().fit(X_train,y_train)
 print("Training set score: {:.2f}".format(ridge.score(X_train, y_train)))
 print("Test set score: {:.2f}".format(ridge.score(X_test, y_test)))
+
 prediction_list = []
-df = pd.DataFrame()
-with open('predictions.csv', 'w', newline='') as prediction_file:
-    writer = csv.writer(prediction_file)
-    writer.writerow(['Date', 'Predicted Output [kWh]', 'Filtered Data'])
 
-    for index, row in data.iterrows():
+for index, row in data.iterrows():
 
-        year = int(row["Year"])
-        month = int(row["Month"])
-        day = int(row["Day"])
-        hour = int(row["Hour"])
-        day_to_predict = datetime.date(year=year, month=month, day=day)
-        precipitation_intensity = row["Precipitation Intensity"]
-        precipitation_probability = row["Precipitation Probability"]
-        dew_point = row["Dew Point"]
-        highest_temp = row["Highest Temp"]
-        lowest_temp = row["Lowest Temp"]
-        humidity = row['Humidity']
-        uv_index = row['UV Index']
+    year = int(row["Year"])
+    month = int(row["Month"])
+    day = int(row["Day"])
+    hour = int(row["Hour"])
+    day_to_predict = datetime.date(year=year, month=month, day=day)
+    precipitation_intensity = row["Precipitation Intensity"]
+    precipitation_probability = row["Precipitation Probability"]
+    dew_point = row["Dew Point"]
+    highest_temp = row["Highest Temp"]
+    lowest_temp = row["Lowest Temp"]
+    humidity = row['Humidity']
+    uv_index = row['UV Index']
 
-        prediction_values = numpy.array([[year, month, day, hour, precipitation_intensity,
-                                          precipitation_probability ,dew_point, highest_temp, lowest_temp,
-                                          humidity, uv_index]])
+    prediction_values = numpy.array([[year, month, day, hour, precipitation_intensity,
+                                      precipitation_probability ,dew_point, highest_temp, lowest_temp,
+                                      humidity, uv_index]])
 
-        prediction = Ridge.predict(ridge, prediction_values)
-        write_string = str(prediction)
-        prediction_list.append(prediction)
-        #Predictions are outputted with brackets around the number which is a nuisance when
-        # trying to graph the data in excel so I remove them before writing to the csv
-        filtered_data.loc[index, "Predicted Generation [kWh]"] = str(prediction).strip("[]")
-        filtered_data.loc[index, "Date"] = day_to_predict
-        write_string = write_string.strip("[]")
-        writer.writerow([day_to_predict, write_string])
+    prediction = Ridge.predict(ridge, prediction_values)
+    write_string = str(prediction).strip("[]")
+    prediction_list.append(prediction)
+
+    #Predictions are outputted with brackets around the number which is a nuisance when
+    # trying to graph the data in excel so I remove them before writing to the csv
+    filtered_data.loc[index, "Predicted Generation [kWh]"] = str(prediction).strip("[]")
+
+    filtered_data.loc[index, "Date"] = day_to_predict
+    write_string = write_string.strip("[]")
+    # writer.writerow([day_to_predict, write_string])
 
 
 
 filtered_predictions = filter(a, b, prediction_list, axis=0)
-filtered_actual = filter(a, b, butler_data["Generation [kWh]"], axis=0)
+#filtered_actual = filter(a, b, data["Generation [kWh]"], axis=0)
+#filtered_data["Predicted Generation"] = prediction_list
 filtered_data["Filtered Predictions"] = filtered_predictions
 #data["Actual Generation [kWh]"] = butler_data["Generation [kWh]"]
-filtered_data["Filtered Actual"] = filtered_actual
+#filtered_data["Filtered Actual"] = filtered_actual
 
 
-filtered_data.to_csv(r"C:\Users\ptdim\Desktop\MLTesting\filteredCSV.csv")
+filtered_data.to_csv(r"C:\Users\ptdim\Desktop\MLTesting\filteredGarage.csv", index=None)
 plt.plot(filtered_predictions)
-
+#plt.plot(filtered_actual)
+plt.plot(prediction_list)
+plt.legend()
 plt.show()
 # today = numpy.array( [[2019, 7, 20, 0, 0.01]])
 # yesterday = numpy.array( [[2019, 7,19 , 0, 0.01]])
