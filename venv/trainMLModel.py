@@ -111,12 +111,16 @@ filtered_data["Filtered Predictions"] = filtered_predictions
 #data["Actual Generation [kWh]"] = butler_data["Generation [kWh]"]
 #filtered_data["Filtered Actual"] = filtered_actual
 
+file_name = input("What would you like to name the file?: ")
+file_name = file_name + ".csv"
+save_directory = r"C:\Users\ptdim\Desktop\MLTesting\\"
+save_location = save_directory + file_name
+filtered_data.to_csv(save_location, index=None)
 
-filtered_data.to_csv(r"C:\Users\ptdim\Desktop\MLTesting\filteredGarage.csv", index=None)
+
 plt.plot(filtered_predictions)
 #plt.plot(filtered_actual)
 plt.plot(prediction_list)
-plt.legend()
 plt.show()
 # today = numpy.array( [[2019, 7, 20, 0, 0.01]])
 # yesterday = numpy.array( [[2019, 7,19 , 0, 0.01]])
