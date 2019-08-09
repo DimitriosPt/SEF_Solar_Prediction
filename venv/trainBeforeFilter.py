@@ -158,11 +158,14 @@ for column in columns:
 
 
 # Plots a bar graph showing the coefficients
+plt.figure(dpi=300)
 barplot_df = pd.DataFrame(list(zip(columns, p_vals)), columns= ["Factor", "P Value"])
 barplot_df = barplot_df.sort_values('P Value')
 seaborn.barplot(x="Factor", y="P Value", data=barplot_df, palette="coolwarm")
+plt.xticks(rotation='vertical')
 plt.tight_layout()
 plt.grid()
+plt.savefig("Barplot.png")
 plt.show()
 
 #plt.plot(data["Generation [kWh]"], 'b')
