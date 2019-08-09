@@ -9,10 +9,9 @@
 # IMPORTANT
 # If this code is ever used to publically display data we must include
 # "Powered By Dark Sky" as well as a hyperlink leading to their website
-
-from darksky import forecast
 import math
 from datetime import datetime as dt
+from darksky import forecast
 from gitignore.API_keys import DARKSKYKEY2 as DARKSYKEY
 
 # time required
@@ -104,7 +103,7 @@ def getPrecipitationChance(latitude, longitude, date_to_calculate):
     return precipitation_chance
 
 def getWeatherData(latitude, longitude, date_to_calculate):
-    APIKEY = DARKSYKEY
+    APIKEY=DARKSYKEY
     epoch_time = math.floor(date_to_calculate.timestamp())
     daily_forecast = forecast(APIKEY, latitude, longitude, epoch_time)
     return daily_forecast

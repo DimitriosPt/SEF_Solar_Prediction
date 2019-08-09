@@ -1,0 +1,16 @@
+# Recursive Feature Elimination
+from sklearn import datasets
+import pandas as pd
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LogisticRegression
+# load the iris datasets
+dataset_location = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\main_house_garageML.csv"
+dataset = pd.read_csv(dataset_location)
+# create a base classifier used to evaluate a subset of attributes
+model = LogisticRegression()
+# create the RFE model and select 3 attributes
+rfe = RFE(model, 3)
+rfe = rfe.fit(dataset.data, dataset.target)
+# summarize the selection of the attributes
+print(rfe.support_)
+print(rfe.ranking_)
