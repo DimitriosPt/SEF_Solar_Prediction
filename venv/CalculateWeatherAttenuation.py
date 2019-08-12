@@ -12,7 +12,7 @@
 import math
 from datetime import datetime as dt
 from darksky import forecast
-from gitignore.API_keys import DARKSKYKEY2 as DARKSYKEY
+from gitignore.API_keys import DARKSKYKEY as DARKSYKEY
 
 # time required
 # Either be a UNIX time (that is, seconds since midnight GMT on 1 Jan 1970) or a string formatted as follows:
@@ -105,5 +105,9 @@ def getPrecipitationChance(latitude, longitude, date_to_calculate):
 def getWeatherData(latitude, longitude, date_to_calculate):
     APIKEY=DARKSYKEY
     epoch_time = math.floor(date_to_calculate.timestamp())
-    daily_forecast = forecast(APIKEY, latitude, longitude, epoch_time)
-    return daily_forecast
+    try:
+        daily_forecast = forecast(APIKEY, latitude, longitude, epoch_time)
+        return daily_forecast
+    except:
+        print(f"There was an error getting the weather data at {date_to_calculate}")
+        exit()

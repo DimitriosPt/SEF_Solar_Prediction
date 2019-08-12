@@ -33,7 +33,6 @@ from scipy.signal import butter as butter
 from scipy.signal import filtfilt as filter
 from CalculateWeatherAttenuation import getWeatherData
 
-
 def make_prediction(ml_model):
     date = datetime.datetime.today() + datetime.timedelta(hours=24)
     year= date.year
@@ -55,10 +54,9 @@ def make_prediction(ml_model):
 
     return Ridge.predict(ml_model, prediction_parameters)
 
-dataset_location = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\main_house_garageML.csv"
-butler_data_path= r"C:\Users\ptdim\Desktop\MLTesting\butlerYearly.csv"
-butler_data = pd.read_csv(butler_data_path)
-data = pd.read_csv(dataset_location)
+DATASET_LOCATION = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv"
+
+data = pd.read_csv(DATASET_LOCATION)
 feature_cols = ['Generation [kWh]', 'Day', 'Month',
                 'Precipitation Intensity', 'Precipitation Probability', 'Dew Point',
                 'Highest Temp', 'Lowest Temp', 'Humidity', 'UV Index']
@@ -68,13 +66,10 @@ data.drop(columns="Hour", inplace=True)
 # we have to subtract yesterday's totals from today's totals to see how much power we generated on the previous day
 data["Generation [kWh]"] = data["Generation [kWh]"].diff(periods=-1)
 
-butler_data["Generation [kWh]"] = butler_data["Generation [kWh]"].diff(periods=-1)
-
 # because getting the daily readings is obtained by subtracting one value from the one below it, this means the bottom
 # row of data will either be massive (and incorrect), or result in NaN, so we are just dropping the bottom row to avoid
 # these issues
 data.drop(data.tail(1).index,inplace=True)
-butler_data.drop(data.tail(1).index,inplace=True)
 
 # Filters the Generation column with a Butterworth Filter to make it less noisy. Training the model
 # off of unfiltered data led to the model predicting massive osscilations due to the inconsistancy of
@@ -102,7 +97,6 @@ for index, row in data.iterrows():
     year = int(row["Year"])
     month = int(row["Month"])
     day = int(row["Day"])
-    #hour = int(row["Hour"])
     day_to_predict = datetime.date(year=year, month=month, day=day)
     precipitation_intensity = row["Precipitation Intensity"]
     precipitation_probability = row["Precipitation Probability"]
@@ -113,9 +107,9 @@ for index, row in data.iterrows():
     uv_index = row['UV Index']
 
     prediction_values = numpy.array([[year, month, day,
-                                      #hour,
                                       precipitation_intensity,
-                                      precipitation_probability ,dew_point, highest_temp,
+                                      precipitation_probability,
+                                      dew_point, highest_temp,
                                       lowest_temp, humidity, uv_index]])
 
     prediction = Ridge.predict(ridge, prediction_values)
@@ -128,12 +122,10 @@ for index, row in data.iterrows():
 
     filtered_data.loc[index, "Date"] = day_to_predict
     write_string = write_string.strip("[]")
-    # writer.writerow([day_to_predict, write_string])
 
-
+# applies the filter to our graphs to remove the noise
 filtered_predictions = filter(a, b, prediction_list, axis=0)
 filtered_actual = filter(a, b, data["Generation [kWh]"], axis=0)
-#filtered_data["Predicted Generation"] = prediction_list
 filtered_data["Filtered Predictions"] = filtered_predictions
 filtered_data["Filtered Actual"] = filtered_actual
 
@@ -156,25 +148,13 @@ for column in columns:
     print(f'{column}: {p_vals[i]}')
     i += 1
 
-
-# Plots a bar graph showing the coefficients
-plt.figure(dpi=300)
-barplot_df = pd.DataFrame(list(zip(columns, p_vals)), columns= ["Factor", "P Value"])
-barplot_df = barplot_df.sort_values('P Value')
-seaborn.barplot(x="Factor", y="P Value", data=barplot_df, palette="coolwarm")
-plt.xticks(rotation='vertical')
-plt.tight_layout()
-plt.grid()
-plt.savefig("Barplot.png")
-plt.show()
-
-#plt.plot(data["Generation [kWh]"], 'b')
+#provides a simple graph of the filtered data so the user can see if its something worth saving
 plt.plot(filtered_actual, 'g')
-#plt.plot(prediction_list, 'r')
 plt.plot(filtered_predictions, 'y')
 plt.show()
 
-print(f'The Predicted Power Generation for tomorrow is: {make_prediction(ridge)} \n')
+
+print(f' \nThe Predicted Power Generation for tomorrow is: {make_prediction(ridge)} \n')
 
 if(input("Would you like to save this csv? (y/n): ").upper() == 'Y'):
     file_name = input("What would you like to name the file?: ")

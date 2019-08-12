@@ -26,7 +26,7 @@ from scipy.signal import butter as butter
 from scipy.signal import filtfilt as filter
 
 
-dataset_location = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\main_house_garageML.csv"
+dataset_location = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv"
 
 data = pd.read_csv(dataset_location)
 feature_cols = ['Generation [kWh]', 'Day', 'Month',

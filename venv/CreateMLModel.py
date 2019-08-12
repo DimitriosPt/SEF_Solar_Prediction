@@ -5,7 +5,7 @@ from CalculateWeatherAttenuation import getPrecipitationChance as PrecipChance
 from CalculateWeatherAttenuation import getWeatherData
 SONOMALONG= -122.503
 SONOMALAT= 38.387
-FILEPATH = r"C:\Users\ptdim\Desktop\MLTesting\main_house_garage_cummulative.csv"
+FILEPATH = r"C:\Users\ptdim\Desktop\MLTesting\agShedYear.csv"
 df = pd.read_csv(FILEPATH)
 
 df_new = pd.DataFrame()
@@ -23,7 +23,8 @@ df_new['Hour'] = pd.DatetimeIndex(df['Date & Time']).hour
 
 #maps all the weather attributes forcasted for each date to their respective rows
 for index, row in df_new.iterrows():
-    date = dt.datetime.strptime(row['Date & Time'], '%m/%d/%Y %H:%M')
+    date = dt.datetime.strptime(row['Date & Time'], '%Y-%m-%d %H:%M:%S')
+
     # date = dt.datetime.strptime(row['Date & Time'], '%Y-%m-%d %H:%M:%S')
     daily_forecast = getWeatherData(SONOMALAT, SONOMALONG, date)
     daily_data = daily_forecast.daily.data[0]
@@ -39,5 +40,5 @@ for index, row in df_new.iterrows():
 # for most spreadsheet programs, the column at this time is redundant and a reformatted date column
 # has been added so this can be safely removed.
 df_new = df_new.drop("Date & Time", axis=1)
-df_new.to_csv(r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\main_house_garageML.csv", index=None)
+df_new.to_csv(r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv", index=None)
 print(df_new.head())
