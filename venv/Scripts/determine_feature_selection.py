@@ -31,7 +31,8 @@ data.drop(columns="Day", inplace=True)
 data.drop(columns="Hour", inplace=True)
 data.drop(columns="Month", inplace=True)
 data.drop(columns="Year", inplace=True)
-
+data.drop(columns="Dew Point", inplace=True)
+data.drop(columns="Humidity", inplace=True)
 # The data that we pull from the egauges are cummulative, so if we want to get an actual daily solar production reading
 # we have to subtract yesterday's totals from today's totals to see how much power we generated on the previous day
 data["Generation [kWh]"] = data["Generation [kWh]"].diff(periods=-1)

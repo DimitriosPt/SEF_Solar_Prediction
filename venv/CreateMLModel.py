@@ -1,5 +1,4 @@
 import datetime as dt
-
 import pandas as pd
 from CalculateWeatherAttenuation import getPrecipitationChance as PrecipChance
 from CalculateWeatherAttenuation import getWeatherData
@@ -40,5 +39,6 @@ for index, row in df_new.iterrows():
 # for most spreadsheet programs, the column at this time is redundant and a reformatted date column
 # has been added so this can be safely removed.
 df_new = df_new.drop("Date & Time", axis=1)
-df_new.to_csv(r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv", index=None)
+FILEPATH_OUT = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv"
+df_new.to_csv(FILEPATH_OUT, index=None)
 print(df_new.head())

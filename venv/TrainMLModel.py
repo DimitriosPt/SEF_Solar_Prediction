@@ -26,6 +26,7 @@ import seaborn
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error
 from matplotlib import pyplot as plt
 from regressors import stats
 import pandas as pd
@@ -85,7 +86,11 @@ y_test = X_test["Generation [kWh]"]
 X_train = X_train.drop(columns="Generation [kWh]")
 X_test = X_test.drop(columns="Generation [kWh]")
 
-ridge = Ridge(alpha=.005, normalize=True).fit(X_train,y_train)
+# builds the ridge regression with our training data
+# changing the alpha levels changes how aggressively it tries to overfit
+# the normalize must be set to true or parameters like year (2019 for example) will
+# have higher influence on the model due to the size of the value
+ridge = Ridge(alpha=.05, normalize=True).fit(X_train,y_train)
 print("Training set score: {:.2f}".format(ridge.score(X_train, y_train)))
 print("Test set score: {:.2f}".format(ridge.score(X_test, y_test)))
 
@@ -149,12 +154,16 @@ for column in columns:
     i += 1
 
 #provides a simple graph of the filtered data so the user can see if its something worth saving
-plt.plot(filtered_actual, 'g')
-plt.plot(filtered_predictions, 'y')
+plt.plot(filtered_actual, 'g', label="Filtered Actual")
+plt.plot(filtered_predictions, 'y', label="Filtered Predictions")
+plt.legend()
 plt.show()
 
-
-print(f' \nThe Predicted Power Generation for tomorrow is: {make_prediction(ridge)} \n')
+y_predictions = ridge.predict(X_test)
+regression_model_mse = mean_squared_error(y_predictions, y_test)
+print(f'Mean Squared Error: {regression_model_mse}')
+print(f'Square Root of MSE = {math.sqrt(regression_model_mse)}')
+print(f'\nThe Predicted Power Generation for tomorrow is: {make_prediction(ridge)} \n')
 
 if(input("Would you like to save this csv? (y/n): ").upper() == 'Y'):
     file_name = input("What would you like to name the file?: ")
