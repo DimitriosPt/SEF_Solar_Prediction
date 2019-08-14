@@ -9,13 +9,15 @@
 # This program will take a csv of the format
 # [Generation, Year, Day, Month, Hour, Precipitation Intensity, Precipitation Chance, Dew Point,
 # Highest Temp, Lowest temp, Humidity, UV Index]
-# Where day is the numbered day of the month and month is the number of the month, hour is the time
-# at which the data is collected in military time. Working to remove the hour parameter.
+# Where day is the numbered day of the month and month is the number of the month
 # The program takes this data and uses machine learning to create a ridge regression model.
 # Once the model is built, predictions can be made using the
 # Ridge.predict(ridge, data_test) method with data_test taking the form of
 # a nested numpy array such that testing March 30 2020 with a forecasted precipitation chance
-# of 45% would look like [[2020, 3, 30, 0, 0.45]]. To make a prediction, you have to use the make_prediction() function
+# [[year, month, day, precipitation_intensity, precipitation_probability,
+#   dew_point, highest_temp, lowest_temp, humidity, uv_index]]].
+
+# To make a prediction, you have to use the make_prediction() function
 # which will take a day to predict as a parameter.
 import math
 import datetime
@@ -34,8 +36,18 @@ from scipy.signal import butter as butter
 from scipy.signal import filtfilt as filter
 from CalculateWeatherAttenuation import getWeatherData
 
+#Change these to change where you read the data file from and where you save the file to
+DATASET_LOCATION = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv"
+FILE_OUT_DIRECTORY = r"C:\Users\ptdim\Desktop\MLTesting\\"
+
+
+# Uses the model (in our case ridge) to predict tomorrow's generation
+# by gathering weather forecasting data for that day and passing it to
+# the predict function.
+# How far ahead you want to predict can be changed by changing the timedelta to
+# a different number of days
 def make_prediction(ml_model):
-    date = datetime.datetime.today() + datetime.timedelta(hours=24)
+    date = datetime.datetime.today() + datetime.timedelta(days=1)
     year= date.year
     month = date.month
     day = date.day
@@ -46,16 +58,14 @@ def make_prediction(ml_model):
     forecast = getWeatherData(SONOMALAT, SONOMALONG, date)
     daily_forecast = forecast.daily.data[0]
 
-    # the 4th parameter is just a 0 here since that represents the hour of pulling the data
-    # and it shouldnt affect output of any kind
+    # pulls the weather forecasting casting data for the date specified so that a prediction
+    # can be made using the prediction model
     prediction_parameters = numpy.array([[year, day, month, daily_forecast['precipIntensityMax'],
                                           daily_forecast['precipProbability'], daily_forecast['dewPoint'],
                                           daily_forecast['temperatureHigh'], daily_forecast['temperatureLow'],
                                           daily_forecast['humidity'], daily_forecast['uvIndex']]])
 
     return Ridge.predict(ml_model, prediction_parameters)
-
-DATASET_LOCATION = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv"
 
 data = pd.read_csv(DATASET_LOCATION)
 feature_cols = ['Generation [kWh]', 'Day', 'Month',
@@ -71,11 +81,6 @@ data["Generation [kWh]"] = data["Generation [kWh]"].diff(periods=-1)
 # row of data will either be massive (and incorrect), or result in NaN, so we are just dropping the bottom row to avoid
 # these issues
 data.drop(data.tail(1).index,inplace=True)
-
-# Filters the Generation column with a Butterworth Filter to make it less noisy. Training the model
-# off of unfiltered data led to the model predicting massive osscilations due to the inconsistancy of
-# the data we were pulling in.
-a,b = butter(3, 0.05)
 
 X_train, X_test = train_test_split(data, test_size=0.3)
 
@@ -93,6 +98,10 @@ X_test = X_test.drop(columns="Generation [kWh]")
 ridge = Ridge(alpha=.05, normalize=True).fit(X_train,y_train)
 print("Training set score: {:.2f}".format(ridge.score(X_train, y_train)))
 print("Test set score: {:.2f}".format(ridge.score(X_test, y_test)))
+
+# Filters the Generation column with a Butterworth Filter to make it less noisy. Solely for
+# visualization purposes
+a,b = butter(3, 0.05)
 
 filtered_data = data.copy()
 filtered_data["Predicted Generation [kWh]"] = filter(a,b,filtered_data["Generation [kWh]"])
@@ -154,20 +163,20 @@ for column in columns:
     i += 1
 
 #provides a simple graph of the filtered data so the user can see if its something worth saving
-plt.plot(filtered_actual, 'g', label="Filtered Actual")
-plt.plot(filtered_predictions, 'y', label="Filtered Predictions")
+
+plt.plot(numpy.flip(filtered_actual), 'g', label="Filtered Actual")
+plt.plot(numpy.flip(filtered_predictions), 'y', label="Filtered Predictions")
 plt.legend()
 plt.show()
 
 y_predictions = ridge.predict(X_test)
 regression_model_mse = mean_squared_error(y_predictions, y_test)
-print(f'Mean Squared Error: {regression_model_mse}')
+print(f'\nMean Squared Error: {regression_model_mse}')
 print(f'Square Root of MSE = {math.sqrt(regression_model_mse)}')
 print(f'\nThe Predicted Power Generation for tomorrow is: {make_prediction(ridge)} \n')
 
 if(input("Would you like to save this csv? (y/n): ").upper() == 'Y'):
     file_name = input("What would you like to name the file?: ")
     file_name = file_name + ".csv"
-    save_directory = r"C:\Users\ptdim\Desktop\MLTesting\\"
-    save_location = save_directory + file_name
-    filtered_data.to_csv(save_location, index=None)
+    FILE_OUT_DIRECTORY = FILE_OUT_DIRECTORY + file_name
+    filtered_data.to_csv(FILE_OUT_DIRECTORY, index=None)
