@@ -27,12 +27,13 @@ feature_cols = ['Generation [kWh]', 'Day', 'Month',
                 'Precipitation Intensity', 'Precipitation Probability', 'Dew Point',
                 'Highest Temp', 'Lowest Temp', 'Humidity', 'UV Index']
 
-data.drop(columns="Day", inplace=True)
-data.drop(columns="Hour", inplace=True)
-data.drop(columns="Month", inplace=True)
-data.drop(columns="Year", inplace=True)
-data.drop(columns="Dew Point", inplace=True)
-data.drop(columns="Humidity", inplace=True)
+# data.drop(columns="Day", inplace=True)
+# data.drop(columns="Hour", inplace=True)
+# data.drop(columns="Month", inplace=True)
+# data.drop(columns="Year", inplace=True)
+# data.drop(columns="Dew Point", inplace=True)
+# data.drop(columns="Humidity", inplace=True)
+# data.drop(columns="Precipitation Probability", inplace=True)
 # The data that we pull from the egauges are cummulative, so if we want to get an actual daily solar production reading
 # we have to subtract yesterday's totals from today's totals to see how much power we generated on the previous day
 data["Generation [kWh]"] = data["Generation [kWh]"].diff(periods=-1)
@@ -79,5 +80,5 @@ barplot_df = barplot_df.sort_values('P Value')
 seaborn.barplot(x="P Value", y="Factor", data=barplot_df, palette="coolwarm")
 plt.xticks(rotation='vertical')
 plt.tight_layout()
-plt.savefig("featureBarplot.svg")
+plt.savefig("featureBarplot.png")
 plt.show()
