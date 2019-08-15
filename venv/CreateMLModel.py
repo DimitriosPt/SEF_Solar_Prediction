@@ -29,14 +29,21 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
         sys.stdout.write('\n')
     sys.stdout.flush()
 
-SONOMALONG= -122.503
-SONOMALAT= 38.387
-FILEPATH = r"C:\Users\ptdim\Desktop\MLTesting\agshedClean.csv"
-df = pd.read_csv(FILEPATH)
+SONOMALONG=-122.503
+SONOMALAT=38.387
+FILEPATH=r"C:\Users\ptdim\Desktop\MLTesting\agshedClean.csv"
+FILEPATH_OUT=r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv"
+
+try:
+    df = pd.read_csv(FILEPATH)
+
+except:
+    print("File location not valid, exiting")
+    exit()
 
 df_new = pd.DataFrame()
 
-df_new['Generation [kWh]'] = df["Generation [kWh]"]
+df_new['Generation [kWh]'] = df['Generation [kWh]']
 df_new['Date & Time'] = df['Date & Time']
 # Because ML's cant really use date as a factor as it is ever increasing
 # but day of the year is important, I'm breaking up the date into
@@ -54,10 +61,20 @@ for index, row in df_new.iterrows():
     clear = lambda: os.system('cls')
     clear()
     print_progress(i, df_new.shape[0])
-    date = dt.datetime.strptime(row['Date & Time'], '%Y-%m-%d %H:%M:%S')
+
+    try:
+        date = dt.datetime.strptime(row['Date & Time'], '%Y-%m-%d %H:%M:%S')
+    except:
+        print("There was an error interpretting the date format in the file \n "
+              "This can happen if you used daily averages instead of cummulative data from the e-gauge")
 
     # date = dt.datetime.strptime(row['Date & Time'], '%Y-%m-%d %H:%M:%S')
-    daily_forecast = getWeatherData(SONOMALAT, SONOMALONG, date)
+    try:
+         daily_forecast = getWeatherData(SONOMALAT, SONOMALONG, date)
+    except:
+        print("Error gathering forecast data. If this persists change the API key in calculateWeatherAttenuation.py as "
+              "there is a limit of 1000 calls per day")
+
     daily_data = daily_forecast.daily.data[0]
     df_new.loc[index, 'Precipitation Intensity'] = daily_data['precipIntensityMax']
     df_new.loc[index, 'Precipitation Probability'] = daily_data['precipProbability']
@@ -72,6 +89,7 @@ for index, row in df_new.iterrows():
 # for most spreadsheet programs, the column at this time is redundant and a reformatted date column
 # has been added so this can be safely removed.
 df_new = df_new.drop("Date & Time", axis=1)
-FILEPATH_OUT = r"C:\Users\ptdim\Desktop\Stone Edge Farms\Data CSV's\agShedML.csv"
+print("\n")
+print(df_new.head())
 df_new.to_csv(FILEPATH_OUT, index=None)
-print("\n" + df_new.head())
+

@@ -1,5 +1,3 @@
-#TODO figure out why the actual data is being recorded as already filtered 8/5/2019
-
 # Dimitrios Papageorgacopoulos
 # Wooster Engineering
 # Summer 2019
@@ -18,7 +16,7 @@
 #   dew_point, highest_temp, lowest_temp, humidity, uv_index]]].
 
 # To make a prediction, you have to use the make_prediction() function
-# which will take a day to predict as a parameter.
+# which will take the ridge model and predict the next day as default.
 import math
 import datetime
 import csv
@@ -82,7 +80,7 @@ data["Generation [kWh]"] = data["Generation [kWh]"].diff(periods=-1)
 # these issues
 data.drop(data.tail(1).index,inplace=True)
 
-X_train, X_test = train_test_split(data, test_size=0.3)
+X_train, X_test = train_test_split(data, test_size=0.2)
 
 # Sets the dependant variables into their own data structures
 y_train = X_train["Generation [kWh]"]
@@ -164,16 +162,19 @@ for column in columns:
 
 #provides a simple graph of the filtered data so the user can see if its something worth saving
 
+# reverses the arrays for graphing since the egauge outputs data from most recent to oldest
 plt.plot(numpy.flip(filtered_actual), 'g', label="Filtered Actual")
 plt.plot(numpy.flip(filtered_predictions), 'y', label="Filtered Predictions")
 plt.legend()
 plt.show()
 
+# prints statistical information
 y_predictions = ridge.predict(X_test)
 regression_model_mse = mean_squared_error(y_predictions, y_test)
 print(f'\nMean Squared Error: {regression_model_mse}')
 print(f'Square Root of MSE = {math.sqrt(regression_model_mse)}')
 print(f'\nThe Predicted Power Generation for tomorrow is: {make_prediction(ridge)} \n')
+
 
 if(input("Would you like to save this csv? (y/n): ").upper() == 'Y'):
     file_name = input("What would you like to name the file?: ")
